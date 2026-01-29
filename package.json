@@ -1,0 +1,21 @@
+{
+  "name": "vramancer",
+  "version": "1.0.0",
+  "description": "Can my machine run this model? Estimate VRAM/RAM, tok/s, and TTFT.",
+  "bin": {
+    "vramancer": "./bin/vramancer-wrapper.js",
+    "modelfit": "./bin/vramancer-wrapper.js"
+  },
+  "scripts": {
+    "install": "node install.js"
+  },
+  "author": "Jules",
+  "license": "MIT",
+  "files": [
+    "bin",
+    "src",
+    "Cargo.toml",
+    "Cargo.lock",
+    "install.js"
+  ]
+}
