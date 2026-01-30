@@ -117,7 +117,19 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut A
                      return Ok(());
                 }
 
-                if app.is_searching {
+                if app.show_input {
+                    match key.code {
+                        KeyCode::Enter => app.submit_input(),
+                        KeyCode::Esc => app.toggle_input(),
+                        KeyCode::Backspace => {
+                             app.input_buffer.pop();
+                        }
+                        KeyCode::Char(c) => {
+                             app.input_buffer.push(c);
+                        }
+                        _ => {}
+                    }
+                } else if app.is_searching {
                     match key.code {
                         KeyCode::Enter => {
                             app.is_searching = false;
@@ -143,6 +155,7 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut A
                     // Normal Navigation Mode
                     match key.code {
                         KeyCode::Char('q') => return Ok(()),
+                        KeyCode::Char('i') => app.toggle_input(),
                         KeyCode::Char('e') => {
                             if let Err(e) = app.export_report() {
                                 // In a real app we would show an error popup

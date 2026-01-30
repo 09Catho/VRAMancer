@@ -9,7 +9,8 @@
   "scripts": {
     "install": "node install.js",
     "build": "cargo build --release --locked",
-    "test": "cargo test --locked"
+    "test": "cargo test --locked",
+    "prepublishOnly": "npm test"
   },
   "author": "Jules",
   "license": "MIT",

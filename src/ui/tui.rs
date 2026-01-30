@@ -76,6 +76,55 @@ fn render_main(f: &mut Frame, app: &mut App, area: Rect) {
     render_models_list(f, app, chunks[0]);
     render_prediction(f, app, chunks[1]);
     render_settings(f, app, chunks[2]);
+
+    if app.show_input {
+        render_input_popup(f, app);
+    }
+}
+
+fn render_input_popup(f: &mut Frame, app: &App) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(" Add Model (Name, Ollama Tag, HF ID/URL) ")
+        .style(Style::default().bg(Color::Blue).fg(Color::White));
+
+    let area = centered_rect(60, 20, f.size());
+    f.render_widget(ratatui::widgets::Clear, area); // Clear background
+
+    let p = Paragraph::new(app.input_buffer.as_str())
+        .block(block)
+        .alignment(Alignment::Left);
+
+    f.render_widget(p, area);
+
+    // Cursor (simple approximation)
+    f.set_cursor(area.x + 1 + app.input_buffer.len() as u16, area.y + 1);
+}
+
+fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+    let popup_layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_y) / 2),
+                Constraint::Percentage(percent_y),
+                Constraint::Percentage((100 - percent_y) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(r);
+
+    Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            [
+                Constraint::Percentage((100 - percent_x) / 2),
+                Constraint::Percentage(percent_x),
+                Constraint::Percentage((100 - percent_x) / 2),
+            ]
+            .as_ref(),
+        )
+        .split(popup_layout[1])[1]
 }
 
 fn render_models_list(f: &mut Frame, app: &mut App, area: Rect) {
@@ -282,10 +331,12 @@ fn render_settings(f: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_footer(f: &mut Frame, app: &App, area: Rect) {
-    let keys = if !app.search_query.is_empty() {
+    let keys = if app.show_input {
+        "ENTER submit | ESC cancel"
+    } else if !app.search_query.is_empty() {
         "ESC clear search | ENTER select"
     } else {
-        "Q quit | / search | J/K navigate | TAB settings | +/- ctx | E export"
+        "Q quit | i Add Model | / search | J/K navigate | TAB settings | +/- ctx | E export"
     };
 
     let p = Paragraph::new(keys)

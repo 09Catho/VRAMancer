@@ -19,6 +19,11 @@ pub struct App {
     pub current_estimation: Option<Estimation>,
     pub is_searching: bool,
 
+    // Input Popup State
+    pub show_input: bool,
+    pub input_buffer: String,
+    pub input_cursor_position: usize,
+
     pub matcher: SkimMatcherV2,
 }
 
@@ -27,18 +32,8 @@ impl App {
         let system = detect();
         let mut models = list_models();
 
-        // If no models found, add some examples or manual entry hints
-        if models.is_empty() {
-            models.push(Model {
-                name: "No local models found (ollama list)".to_string(),
-                family: "unknown".to_string(),
-                size_label: "?".to_string(),
-                total_params_billions: 0.0,
-                active_params_billions: 0.0,
-                quant: "unknown".to_string(),
-                source: ModelSource::Manual,
-            });
-        }
+        // Removed the "No local models" placeholder logic to keep list clean
+        // if models.is_empty() { ... }
 
         let filtered = models.clone();
 
@@ -53,6 +48,9 @@ impl App {
             quant_override: "Original".to_string(),
             current_estimation: None,
             is_searching: false,
+            show_input: false,
+            input_buffer: String::new(),
+            input_cursor_position: 0,
             matcher: SkimMatcherV2::default(),
         };
         app.recalculate();
@@ -78,6 +76,54 @@ impl App {
         let estimation = estimate_usage(&model, &self.system, self.context_length, self.batch_size);
         self.current_estimation = Some(estimation);
     }
+
+    pub fn toggle_input(&mut self) {
+        self.show_input = !self.show_input;
+        if self.show_input {
+            self.is_searching = false; // Disable search if opening input
+            self.input_buffer.clear();
+            self.input_cursor_position = 0;
+        }
+    }
+
+    pub fn submit_input(&mut self) {
+        if self.input_buffer.trim().is_empty() {
+            self.show_input = false;
+            return;
+        }
+
+        use crate::adapters::hf::parse_hf_model_id;
+        use crate::core::heuristics::{parse_model_string, ModelSource};
+
+        let input = self.input_buffer.trim();
+        let new_model =
+            if input.starts_with("http") || input.contains("huggingface.co") || input.contains('/')
+            {
+                // Assume HF URL or ID
+                let mut m = parse_hf_model_id(input);
+                m.source = ModelSource::HuggingFace;
+                m.name = format!("[R] {}", m.name); // Mark as Remote
+                m
+            } else {
+                // Assume Ollama or simple name
+                let mut m = parse_model_string(input, ModelSource::Manual);
+                m.name = format!("[M] {}", m.name); // Mark as Manual
+                m
+            };
+
+        // Add to models list
+        self.models.insert(0, new_model); // Add to top
+
+        // Reset filters
+        self.search_query.clear();
+        self.filtered_models = self.models.clone();
+        self.selected_index = 0;
+        self.recalculate();
+
+        self.show_input = false;
+    }
+
+    // ... existing search methods ...
 
     pub fn update_search(&mut self, query: String) {
         self.search_query = query;
