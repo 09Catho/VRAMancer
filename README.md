@@ -22,6 +22,14 @@ cargo install --path .
 
 ### Via NPM
 
+To install directly from the source code (before publishing to npm registry):
+
+```bash
+npm install -g .
+```
+
+Or if you have published it:
+
 ```bash
 npm install -g vramancer
 ```
