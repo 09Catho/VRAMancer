@@ -1,6 +1,6 @@
 {
   "name": "vramancer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Can my machine run this model? Estimate VRAM/RAM, tok/s, and TTFT.",
   "bin": {
     "vramancer": "./bin/vramancer-wrapper.js",
