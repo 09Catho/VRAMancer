@@ -25,6 +25,8 @@ pub struct App {
     pub input_cursor_position: usize,
 
     pub matcher: SkimMatcherV2,
+
+    pub notification: Option<(String, std::time::Instant)>,
 }
 
 impl App {
@@ -52,9 +54,19 @@ impl App {
             input_buffer: String::new(),
             input_cursor_position: 0,
             matcher: SkimMatcherV2::default(),
+            notification: None,
         };
         app.recalculate();
         app
+    }
+
+    pub fn on_tick(&mut self) {
+        // Clear notification after 3 seconds
+        if let Some((_, time)) = self.notification {
+            if time.elapsed() > std::time::Duration::from_secs(3) {
+                self.notification = None;
+            }
+        }
     }
 
     pub fn recalculate(&mut self) {
@@ -95,21 +107,46 @@ impl App {
         use crate::adapters::hf::parse_hf_model_id;
         use crate::core::heuristics::{parse_model_string, ModelSource};
 
-        let input = self.input_buffer.trim();
-        let new_model =
-            if input.starts_with("http") || input.contains("huggingface.co") || input.contains('/')
-            {
-                // Assume HF URL or ID
-                let mut m = parse_hf_model_id(input);
-                m.source = ModelSource::HuggingFace;
-                m.name = format!("[R] {}", m.name); // Mark as Remote
-                m
-            } else {
-                // Assume Ollama or simple name
-                let mut m = parse_model_string(input, ModelSource::Manual);
-                m.name = format!("[M] {}", m.name); // Mark as Manual
-                m
-            };
+        let mut input = self.input_buffer.trim().to_string();
+
+        // 1. Clean URL
+        if input.contains("://") {
+            if let Some(pos) = input.find("://") {
+                input = input[pos + 3..].to_string();
+            }
+        }
+
+        // 2. Identify Source & Extract Name
+        let new_model = if input.contains("ollama.com/library/") {
+            // e.g. ollama.com/library/deepseek-r1 -> deepseek-r1
+            let name = input.split("ollama.com/library/").last().unwrap_or(&input);
+            let clean_name = name.split('?').next().unwrap_or(name); // remove query params
+
+            let mut m = parse_model_string(clean_name, ModelSource::Manual);
+            m.name = format!("[O] {}", clean_name);
+            m.source = ModelSource::Ollama;
+            m
+        } else if input.contains("huggingface.co/") {
+            // e.g. huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF
+            let name_part = input.split("huggingface.co/").last().unwrap_or(&input);
+            let clean_name = name_part.split("/tree/").next().unwrap_or(name_part); // handle tree views
+
+            let mut m = parse_hf_model_id(clean_name);
+            m.source = ModelSource::HuggingFace;
+            m.name = format!("[HF] {}", m.name);
+            m
+        } else if input.contains('/') {
+            // Assume HF ID like "TheBloke/Llama-2"
+            let mut m = parse_hf_model_id(&input);
+            m.source = ModelSource::HuggingFace;
+            m.name = format!("[HF] {}", m.name);
+            m
+        } else {
+            // Assume Ollama Tag or simple Name
+            let mut m = parse_model_string(&input, ModelSource::Manual);
+            m.name = format!("[M] {}", m.name);
+            m
+        };
 
         // Add to models list
         self.models.insert(0, new_model); // Add to top
@@ -167,7 +204,7 @@ impl App {
         self.recalculate();
     }
 
-    pub fn export_report(&self) -> std::io::Result<()> {
+    pub fn export_report(&mut self) -> std::io::Result<()> {
         if let Some(est) = &self.current_estimation {
             if self.filtered_models.is_empty() {
                 return Ok(());
@@ -201,6 +238,11 @@ impl App {
                 est.recommendation
             );
             std::fs::write("modelfit_report.md", md_output)?;
+
+            self.notification = Some((
+                "Report exported successfully!".to_string(),
+                std::time::Instant::now(),
+            ));
         }
         Ok(())
     }

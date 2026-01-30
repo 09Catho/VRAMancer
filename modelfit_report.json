@@ -1,0 +1,33 @@
+{
+  "estimation": {
+    "notes": [
+      "Assumed 16.0 bits per weight (f16)"
+    ],
+    "ram_usage_bytes": 2289958912,
+    "recommendation": "Model is too large for this system.",
+    "tokens_per_sec": 3.3370224630563734,
+    "ttft_ms": 122744.15426764854,
+    "vram_status": "No",
+    "vram_usage_bytes": 6439305216
+  },
+  "model": {
+    "active_params_billions": 7.0,
+    "family": "deepseek",
+    "name": "[O] deepseek-r1",
+    "quant": "f16",
+    "size_label": "unknown",
+    "source": "Ollama",
+    "total_params_billions": 7.0
+  },
+  "system": {
+    "cpu_cores": 16,
+    "cpu_name": "AMD Ryzen 7 7735HS with Radeon Graphics        ",
+    "gpu": {
+      "backend": "Nvidia",
+      "name": "NVIDIA GeForce RTX 4050 Laptop GPU",
+      "vram_total_bytes": 6439305216
+    },
+    "ram_available_bytes": 2289958912,
+    "ram_total_bytes": 16366567424
+  }
+}

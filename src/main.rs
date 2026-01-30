@@ -4,7 +4,7 @@ mod ui;
 
 use clap::Parser;
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -109,15 +109,19 @@ fn run_tui() -> Result<(), Box<dyn Error>> {
 fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut App) -> io::Result<()> {
     loop {
         terminal.draw(|f| render_ui(f, app))?;
+        
+        // Update background tasks (notifications)
+        app.on_tick();
 
         if crossterm::event::poll(Duration::from_millis(250))? {
             if let Event::Key(key) = event::read()? {
-                // Global exit
-                if key.code == KeyCode::Char('c') && key.modifiers.contains(event::KeyModifiers::CONTROL) {
-                     return Ok(());
-                }
+                if key.kind == KeyEventKind::Press {
+                    // Global exit
+                    if key.code == KeyCode::Char('c') && key.modifiers.contains(event::KeyModifiers::CONTROL) {
+                         return Ok(());
+                    }
 
-                if app.show_input {
+                    if app.show_input {
                     match key.code {
                         KeyCode::Enter => app.submit_input(),
                         KeyCode::Esc => app.toggle_input(),
@@ -129,6 +133,7 @@ fn run_app<B: ratatui::backend::Backend>(terminal: &mut Terminal<B>, app: &mut A
                         }
                         _ => {}
                     }
+                }
                 } else if app.is_searching {
                     match key.code {
                         KeyCode::Enter => {

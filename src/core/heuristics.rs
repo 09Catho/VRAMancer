@@ -340,6 +340,8 @@ fn detect_size(name: &str, family: &str) -> (String, f64, f64) {
         "gemma" => ("2b".to_string(), 2.0, 2.0),
         "qwen" => ("7b".to_string(), 7.0, 7.0),
         "phi" => ("3b".to_string(), 3.0, 3.0),
+        // Add deepseek defaults
+        "deepseek" => ("67b".to_string(), 67.0, 67.0), // Guess high or 67b default
         _ => ("unknown".to_string(), 7.0, 7.0),
     }
 }
