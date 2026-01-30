@@ -28,6 +28,7 @@ jobs:
     needs: test
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
+    environment: NPM_TOKEN
     permissions:
       contents: read
       id-token: write
