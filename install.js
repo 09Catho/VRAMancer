@@ -15,7 +15,7 @@ try {
 try {
   // Install to local bin directory
   // --root . installs to ./bin/vramancer
-  execSync('cargo install --path . --root . --force', { stdio: 'inherit' });
+  execSync('cargo install --path . --root . --force --locked', { stdio: 'inherit' });
   console.log('vramancer built successfully!');
 } catch (e) {
   console.error('Failed to build vramancer.');

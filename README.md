@@ -34,6 +34,8 @@ Or if you have published it:
 npm install -g vramancer
 ```
 
+> Note: The npm install step builds the Rust binary locally, so make sure the Rust toolchain (`cargo`) is available on your system.
+
 ## Usage
 
 ### TUI Mode

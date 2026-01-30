@@ -1,1 +1,6 @@
-/target
+target/
+bin/vramancer
+.crates*
+node_modules/
+npm-debug.log*
+*.tgz
